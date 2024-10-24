@@ -7,9 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.railwayticketnotification.dto.message.TicketData;
 import org.example.railwayticketnotification.service.intface.TicketMailSender;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
 
 @Slf4j
 @Service
@@ -19,14 +22,23 @@ public class TicketMailSenderImpl implements TicketMailSender {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
+    @Value("${ticket.file.base.directory}")
+    private String fileBaseDirectory;
+
     private final JavaMailSender mailSender;
 
     @Override
     public void sendTicketEmail(TicketData ticketData) throws MessagingException {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
-        helper.setFrom(senderEmail);
-        helper.setTo(ticketData.getPassengerEmail());
+        FileSystemResource resource = new FileSystemResource(
+                new File(
+                        String.format("%s/%s/%s", fileBaseDirectory, ticketData.getFileDirectory(), ticketData.getFilename())
+                )
+        );
+
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+        mimeMessageHelper.setFrom(senderEmail);
+        mimeMessageHelper.setTo(ticketData.getPassengerEmail());
         String subject = "Download Ticket";
         String content = "<p>Dear, " + ticketData.getPassengerName() + "</p>"
                 + "<p>You have successfully purchased BD railway ticket. Please download the ticket from here. "
@@ -36,9 +48,10 @@ public class TicketMailSenderImpl implements TicketMailSender {
                 + "<p>Thank you for your journey with BD Railway.</p>"
                 + "<p>Best Regards,</p>"
                 + "<p>System Administrator.</p>";
-        helper.setSubject(subject);
-        helper.setText(content, true);
-        mailSender.send(message);
+        mimeMessageHelper.setSubject(subject);
+        mimeMessageHelper.setText(content, true);
+        mimeMessageHelper.addAttachment(ticketData.getFilename(), resource);
+        mailSender.send(mimeMessage);
 
         log.info("Email sent successfully to: {}", ticketData.getPassengerEmail());
     }
