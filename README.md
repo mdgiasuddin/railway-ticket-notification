@@ -25,4 +25,6 @@ To build and run the project, follow these steps:
 * Clone the repository: `git clone https://github.com/mdgiasuddin/railway-ticket-notification.git`.
 * Change the properties `spring.mail.username` & `spring.mail.password` in the `application.properties` file by
   replacing `${MAIL_USERNAME}` & `${MAIL_PASSWORD}` with your suitable email & its password.
+* Change the properties `ticket.file.base.directory` in `application.properties` by replacing
+  `${TICKET_FILE_BASE_DIRECTORY}` with the same folder directory used in `Railway-Ticket-Management` Project.
 * Run the project.
